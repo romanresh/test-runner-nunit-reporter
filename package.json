@@ -12,6 +12,7 @@
     "@types/xml": "^1.0.8",
     "@web/test-runner-core": "^0.10.27",
     "xml": "^1.0.1",
-    "xml2js": "^0.4.23"
+    "xml2js": "^0.4.23",
+    "xmlbuilder2": "^3.0.2"
   }
 }
