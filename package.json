@@ -1,0 +1,17 @@
+{
+  "name": "test-runner-nunit-reporter",
+  "version": "1.0.0",
+  "description": "NUnit reported for Web Test Runner",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/xml": "^1.0.8",
+    "@web/test-runner-core": "^0.10.27",
+    "xml": "^1.0.1",
+    "xml2js": "^0.4.23"
+  }
+}
