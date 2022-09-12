@@ -11,8 +11,6 @@ const STACK_TRACE_UNIQUE_IDS_REGEX =
 
 export interface NUnitReporterArgs {
     outputPath?: string;
-    reportLogs?: boolean;
-    /* package root dir. defaults to cwd */
     rootDir?: string;
 }
 
