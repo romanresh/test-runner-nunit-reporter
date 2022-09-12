@@ -1,11 +1,13 @@
-import { GetTestProgressArgs, Reporter, ReportTestResultsArgs, SessionResult, TestResult, TestRunFinishedArgs, TestRunStartedArgs, TestSession } from "@web/test-runner-core";
-import { ReporterArgs, StopArgs } from "@web/test-runner-core/dist/reporter/Reporter";
+import { Reporter, TestResult, TestRunFinishedArgs, TestSession } from "@web/test-runner-core";
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
-import { XmlObject } from 'xml';
 import { create } from 'xmlbuilder2';
 import { XMLBuilder } from "xmlbuilder2/lib/interfaces";
+import { TestSuiteResult } from "@web/test-runner-core/src/test-session/TestSession";
+
+const STACK_TRACE_UNIQUE_IDS_REGEX =
+  /localhost:\d+|wtr-session-id=[\w\d]+-[\w\d]+-[\w\d]+-[\w\d]+-[\w\d]+|/g;
 
 export interface NUnitReporterArgs {
     outputPath?: string;
@@ -28,41 +30,35 @@ class NUnitReporter implements Reporter {
     onTestRunFinished(args: TestRunFinishedArgs): void {
         const dir = path.dirname(this.outputPath);
         fs.mkdirSync( dir, { recursive: true });
-        const xml = this.generator.getXml(args.sessions);
-        fs.writeFileSync(this.outputPath, xml);
-    }
-
-    private generateXml(sessions: TestSession[]): string {
-        for(let session of sessions) {
-
-        }
-    }
-
-    private getTestCase(test: TestResult): XmlObject {
-        
+        const xml = this.generator.generate(args.sessions);
+        fs.writeFileSync(this.outputPath, xml.toString({
+            prettyPrint: true
+        }));
     }
 }
 
+enum BooleanAttrValue {
+    True = "True",
+    False = "False"
+}
+enum ResultAttrValue {
+    Success = "Success",
+    NotRunnable = "NotRunnable",
+    Error = "Error",
+    Failure = "Failure"
+}
+
 class NUnit2TestResultGenerator {
-    protected testsCount: number = 0;
-    protected testsErrors: number = 0;
-    protected testsFailures: number = 0;
-    protected testsInconclusive: number = 0;
-    protected testsNotRun: number = 0;
-    protected testsIgnored: number = 0;
-    protected testsSkipped: number = 0;
-    protected testsInvalid: number = 0;
-    protected lastDate: Date;
     generate(sessions: TestSession[]): XMLBuilder {
         const root = create({ version: '1.0', encoding: 'utf-8', standalone: 'no' });
         const testResults = root.ele('test-results')
-        const d = this.lastDate;
+        const d = new Date();
         testResults.ele('environment', {
             "nunit-version": "2.5.8.0",
             "clr-version": "2.0.50727.1433",
             "os-version": os.release(),
             "platform": os.platform(),
-            "cwd": process.cwd,
+            "cwd": process.cwd(),
             "machine-name": os.hostname(),
             "user": os.userInfo().username,
             "user-domain": os.userInfo().shell
@@ -71,191 +67,133 @@ class NUnit2TestResultGenerator {
             "current-culture": "en-US",
             "current-uiculture": "en-US"
         });
-        testResults.ele('culture-info', {
-            "current-culture": "en-US",
-            "current-uiculture": "en-US"
+        const rootSuiteResults = testResults
+            .ele('results');
+        const state = new State();
+        for(let session of sessions)
+            state.merge(this.processSession(rootSuiteResults, session));
+        rootSuiteResults.att({
+            type: "WebTestRunner",
+            name: "Web Test Runner",
+            success: state.success ? BooleanAttrValue.True : BooleanAttrValue.False,
+            time: "" + state.time,
+            executed: BooleanAttrValue.True,
+            result: state.success ? ResultAttrValue.Success : ResultAttrValue.Failure
         });
-        const results = testResults.ele('results');
-        for(let session of sessions) {
-            this.processSession(results, session);
-        }
         testResults.att({
-            name: "",
-            total: this.testsCount,
-            errors: this.testsErrors,
-            failures: this.testsFailures,
-            inconclusive: this.testsInconclusive,
-            "not-run": this.testsNotRun,
-            ignored: this.testsIgnored,
-            skipped: this.testsSkipped,
-            invalid: this.testsInvalid,
-            date: `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`,
-            time: `${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`
+            'name': "",
+            'total': state.testsCount,
+            'errors': state.testsErrors,
+            'failures': state.testsFailures,
+            'inconclusive': state.testsInconclusive,
+            'not-run': state.testsNotRun,
+            'ignored': state.testsIgnored,
+            'skipped': state.testsSkipped,
+            'invalid': state.testsInvalid,
+            'date': `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`,
+            'time': `${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`
         });
         return testResults;
     }
-    processSession(parent: XMLBuilder, session: TestSession) {
-        
+    protected processSuite(resultsParentEle: XMLBuilder, testSuiteResult?: TestSuiteResult): State {
+        const state = new State();
+        if(testSuiteResult) {
+            const suiteEle = resultsParentEle.ele('test-suite', {
+                type: testSuiteResult.name,
+                name: testSuiteResult.name,
+                executed: BooleanAttrValue.True,
+                asserts: '0'
+            });
+            const resultsEle = suiteEle.ele('results');
+            for(let suite of testSuiteResult.suites)
+                state.merge(this.processSuite(resultsEle, suite));
+            for(let test of testSuiteResult.tests)
+                state.merge(this.processTest(resultsEle, test));
+            suiteEle.att(this.getSuiteElementAttributes(state));
+        }
+        return state;
     }
-    getResults(name: string, total: number, errors: number, failures: number, inconclusive: number, notRun: number,
-        ignored: number, skipped: number, invalid: number, date: Date): XmlObject {
+    protected processTest(resultsParentEle: XMLBuilder, test: TestResult): State {
+        const testEle = resultsParentEle.ele('test-case', {
+            name: test.name,
+            success: test.passed ? BooleanAttrValue.True : BooleanAttrValue.False,
+            time: this.getDuration(test.duration ?? 0),
+            executed: test.skipped ? BooleanAttrValue.False : BooleanAttrValue.True
+        });
+        if(!test.passed) {
+            const stack = test.error?.stack ?? '';
+            const type = test.error?.name ?? (stack.match(/^\w+Error:/) ? stack.split(':')[0] : '');
+            const failureEle = testEle.ele('failure');
+            const message = `${type}: ${test.error?.message ?? ''}`;
+            failureEle.ele('message')
+                .dat(message);
+            failureEle.ele('stack-trace')
+                .dat(stack.replace(STACK_TRACE_UNIQUE_IDS_REGEX, ''));
+        }
+        return new State(test);
+    }
+    protected processSession(resultsParent: XMLBuilder, session: TestSession): State {
+        const suite = resultsParent.ele('test-suite', {
+            type: session.browser.name,
+            name: `Browser - ${session.browser.name}`,
+            executed: BooleanAttrValue.True,
+            asserts: '0'
+        });
+        const results = this.processSuite(suite.ele('results'), session.testResults);
+        suite.att(this.getSuiteElementAttributes(results));
+        return results;
+    }
+    private getSuiteElementAttributes(state: State): object {
         return {
-            _attr: {
-                name,
-                total,
-                errors,
-                failures,
-                inconclusive,
-                "not-run": notRun,
-                ignored,
-                skipped,
-                invalid,
-                date: date.getDate(),
-                time: date.getTime()
-            }
-        }
+            result: state.success ? ResultAttrValue.Success : ResultAttrValue.Failure,
+            success: state.success ? BooleanAttrValue.True : BooleanAttrValue.False,
+            time: this.getDuration(state.time)
+        };
+    }
+    private getDuration(time: number): string {
+        return '' + time / 1000;
     }
 }
 
-interface NUnit2Results {
-    'test-results': NUnit2TestResultsTag
-}
+class State {
+    success: boolean = true;
+    time: number = 0;
+    testsCount: number = 0;
+    testsErrors: number = 0;
+    testsFailures: number = 0;
+    testsInconclusive: number = 0;
+    testsNotRun: number = 0;
+    testsIgnored: number = 0;
+    testsSkipped: number = 0;
+    testsInvalid: number = 0;
 
-type NUnit2TestResultsTag = [
-    {
-        _attr: {
-            name: string,
-            total: number,
-            errors: number,
-            failures: number,
-            inconclusive: number,
-            "not-run": number,
-            ignored: number,
-            skipped: number,
-            invalid: number,
-            date: string,
-            time: string
-        }
-    }, {
-        "environment": NUnit2EnvironmentTag,
-        "culture-info": NUnit2CultureInfoTag,
-        "test-suite": NUnit2TestSuiteTag
+    constructor(test?: TestResult) {
+        if(test)
+            this.register(test);
     }
-]
 
-type NUnit2EnvironmentTag = [
-    {
-        _attr: {
-            "nunit-version": string,
-            "clr-version": string,
-            "os-version": string,
-            "platform": string,
-            "cwd": string,
-            "machine-name": string,
-            "user": string,
-            "user-domain": string
-        }
+    private register(test: TestResult) {
+        this.time += test.duration ?? 0;
+        this.testsCount++;
+        if(test.skipped)
+            this.testsSkipped++;
+        else if(!test.passed)
+            this.testsFailures++;
     }
-];
-type NUnit2CultureInfoTag = [
-    {
-        _attr: {
-            "current-culture": string,
-            "current-uiculture": string
-        }
+
+    merge(other: State) {
+        this.time += other.time;
+        this.success = this.success && other.success;
+        
+        this.testsCount += other.testsCount;
+        this.testsErrors += other.testsErrors;
+        this.testsFailures += other.testsFailures;
+        this.testsInconclusive += other.testsInconclusive;
+        this.testsNotRun += other.testsNotRun;
+        this.testsIgnored += other.testsIgnored;
+        this.testsSkipped += other.testsSkipped;
+        this.testsInvalid += other.testsInvalid;
     }
-];
-type NUnit2TestSuiteTag = [
-    {
-        _attr: {
-            type: string,
-            name: string,
-            description?: string,
-            success?: string,
-            time?: string,
-            executed: string,
-            asserts?: string,
-            result: string
-        }
-    },
-    {
-        categories: [
-            { 
-                "category": {
-                    _attr: {
-                        name: string
-                    }
-                }
-            }
-        ],
-        properties: [
-            {
-                "property": {
-                    _attr: {
-                        name: string,
-                        value: string
-                    }
-                }
-            }
-        ],
-        failure: NUnit2FailureTag,
-        reason: NUnit2ReasonTag,
-        results: NUnit2ResultsTag
-    }
-];
-type NUnit2TestCaseTag = [
-    {
-        _attr: {
-            type: string,
-            name: string,
-            description?: string,
-            success?: string,
-            time?: string,
-            executed: string,
-            asserts?: string,
-            result: string
-        }
-    },
-    {
-        categories: [
-            { 
-                "category": {
-                    _attr: {
-                        name: string
-                    }
-                }
-            }
-        ],
-        properties: [
-            {
-                "property": {
-                    _attr: {
-                        name: string,
-                        value: string
-                    }
-                }
-            }
-        ],
-        failure: NUnit2FailureTag,
-        reason: NUnit2ReasonTag
-    }
-];
-type NUnit2FailureTag = {
-    "message": {
-        _cdata: string
-    },
-    "stack-trace": {
-        _cdata: string
-    }
-}
-type NUnit2ReasonTag = {
-    "message": {
-        _cdata: string
-    }
-}
-type NUnit2ResultsTag = {
-    "test-suite": NUnit2TestSuiteTag,
-    "test-case": NUnit2TestCaseTag
 }
 
 export function nunitReporter(config: NUnitReporterArgs): Reporter {
