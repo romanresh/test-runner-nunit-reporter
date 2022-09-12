@@ -28,7 +28,7 @@ class NUnitReporter implements Reporter {
     onTestRunFinished(args: TestRunFinishedArgs): void {
         const dir = path.dirname(this.outputPath);
         fs.mkdirSync( dir, { recursive: true });
-        const xml = this.generator.generate(args.sessions);
+        const xml = this.generator.generate(args.sessions, this.rootDir);
         fs.writeFileSync(this.outputPath, xml.toString({
             prettyPrint: true
         }));
@@ -47,7 +47,7 @@ enum ResultAttrValue {
 }
 
 class NUnit2TestResultGenerator {
-    generate(sessions: TestSession[]): XMLBuilder {
+    generate(sessions: TestSession[], rootDir: string): XMLBuilder {
         const root = create({ version: '1.0', encoding: 'utf-8', standalone: 'no' });
         const testResults = root.ele('test-results')
         const d = new Date();
@@ -69,7 +69,7 @@ class NUnit2TestResultGenerator {
             .ele('results');
         const state = new State();
         for(let session of sessions)
-            state.merge(this.processSession(rootSuiteResults, session));
+            state.merge(this.processSession(rootSuiteResults, session, rootDir));
         rootSuiteResults.att({
             type: "WebTestRunner",
             name: "Web Test Runner",
@@ -95,19 +95,22 @@ class NUnit2TestResultGenerator {
     }
     protected processSuite(resultsParentEle: XMLBuilder, testSuiteResult?: TestSuiteResult): State {
         const state = new State();
+        let parentEle = resultsParentEle;
         if(testSuiteResult) {
-            const suiteEle = resultsParentEle.ele('test-suite', {
-                type: testSuiteResult.name,
-                name: testSuiteResult.name,
-                executed: BooleanAttrValue.True,
-                asserts: '0'
-            });
-            const resultsEle = suiteEle.ele('results');
+            if(testSuiteResult.name) {
+                const suiteEle = resultsParentEle.ele('test-suite', {
+                    type: testSuiteResult.name,
+                    name: testSuiteResult.name,
+                    executed: BooleanAttrValue.True,
+                    asserts: '0'
+                });
+                parentEle = suiteEle.ele('results');
+            }
             for(let suite of testSuiteResult.suites)
-                state.merge(this.processSuite(resultsEle, suite));
+                state.merge(this.processSuite(parentEle, suite));
             for(let test of testSuiteResult.tests)
-                state.merge(this.processTest(resultsEle, test));
-            suiteEle.att(this.getSuiteElementAttributes(state));
+                state.merge(this.processTest(parentEle, test));
+            parentEle.att(this.getSuiteElementAttributes(state));
         }
         return state;
     }
@@ -130,14 +133,20 @@ class NUnit2TestResultGenerator {
         }
         return new State(test);
     }
-    protected processSession(resultsParent: XMLBuilder, session: TestSession): State {
+    protected processSession(resultsParent: XMLBuilder, session: TestSession, rootDir: string): State {
+        const fileName = session.testFile.replace(rootDir, '');
         const suite = resultsParent.ele('test-suite', {
-            type: session.browser.name,
-            name: `Browser - ${session.browser.name}`,
+            type: `${session.browser.type}_${fileName}`,
+            name: `${session.browser.name}_${session.browser.type}_${fileName}`,
             executed: BooleanAttrValue.True,
             asserts: '0'
         });
         const results = this.processSuite(suite.ele('results'), session.testResults);
+        if(session.errors.length) {
+            for (const error of session.errors) {
+                suite.ele('failure').dat(error.message);
+            }
+        }
         suite.att(this.getSuiteElementAttributes(results));
         return results;
     }
@@ -177,6 +186,7 @@ class State {
             this.testsSkipped++;
         else if(!test.passed)
             this.testsFailures++;
+        this.success = test.passed;
     }
 
     merge(other: State) {

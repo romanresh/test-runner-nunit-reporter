@@ -1,8 +1,8 @@
 {
   "name": "test-runner-nunit-reporter",
-  "version": "1.0.0",
-  "description": "NUnit reported for Web Test Runner",
-  "main": "index.js",
+  "version": "0.0.5",
+  "description": "NUnit reported for @web/test-runner",
+  "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
