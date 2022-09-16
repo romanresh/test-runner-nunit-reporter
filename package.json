@@ -4,15 +4,21 @@
   "description": "NUnit reported for @web/test-runner",
   "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha test/**/*.test.ts --require ts-node/register --reporter dot"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@types/xml": "^1.0.8",
-    "@web/test-runner-core": "^0.10.27",
-    "xml": "^1.0.1",
-    "xml2js": "^0.4.23",
     "xmlbuilder2": "^3.0.2"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.3.3",
+    "@types/mocha": "^9.1.1",
+    "@web/test-runner": "^0.14.0",
+    "@web/test-runner-playwright": "^0.8.7",
+    "chai": "^4.3.6",
+    "mocha": "^10.0.0",
+    "portfinder": "^1.0.32",
+    "ts-node": "^10.9.1"
   }
 }

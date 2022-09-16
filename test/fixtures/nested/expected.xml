@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<test-results name="Web Test Runner tests" total="4" errors="0" failures="0" not-run="0" inconclusive="0" ignored="0" skipped="1" invalid="0" date="<<computed>>" time="<<computed>>">
+  <environment nunit-version="2.5.8.0" clr-version="2.0.50727.1433" os-version="<<computed>>" platform="win32" cwd="<<computed>>" machine-name="<<computed>>" user="<<computed>>"/>
+  <culture-info current-culture="en-US" current-uiculture="en-US"/>
+  <test-suite type="WebTestRunner" name="Web Test Runner" executed="True" result="Success" success="True" time="<<computed>>" asserts="0">
+    <results>
+      <test-suite type="playwright_\test\fixtures\nested\nested-test.js" name="Chromium_playwright_\test\fixtures\nested\nested-test.js" executed="True" result="Success" success="True" time="<<computed>>" asserts="0">
+        <results>
+          <test-suite type="given_a_functor_f" name="given a functor f" executed="True" result="Success" success="True" time="<<computed>>" asserts="0">
+            <results>
+              <test-suite type="and_a_function_a_-&gt;_b" name="and a function a -&gt; b" executed="True" result="Success" success="True" time="<<computed>>" asserts="0">
+                <results>
+                  <test-suite type="map_f_map_g_f_a" name="map f map g f a" executed="True" result="Success" success="True" time="<<computed>>" asserts="0">
+                    <results>
+                      <test-case name="is equivalent to map (f.g) f a" executed="True" result="Success" success="True" time="<<computed>>"/>
+                    </results>
+                  </test-suite>
+                  <test-suite type="skipped_suite" name="skipped suite" executed="False" result="NotRunnable" success="True" time="<<computed>>" asserts="0">
+                    <results>
+                      <test-case name="is equivalent to map (f.g) f a" executed="False" result="NotRunnable" success="False" time="<<computed>>"/>
+                    </results>
+                  </test-suite>
+                  <test-case name="same level" executed="True" result="Success" success="True" time="<<computed>>"/>
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+          <test-case name="fst level" executed="True" result="Success" success="True" time="<<computed>>"/>
+        </results>
+      </test-suite>
+    </results>
+  </test-suite>
+</test-results>

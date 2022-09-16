@@ -1,4 +1,4 @@
-import { Reporter, TestResult, TestRunFinishedArgs, TestSession } from "@web/test-runner-core";
+import { Reporter, TestResult, TestResultError, TestRunFinishedArgs, TestSession } from "@web/test-runner-core";
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
@@ -29,9 +29,12 @@ class NUnitReporter implements Reporter {
         const dir = path.dirname(this.outputPath);
         fs.mkdirSync( dir, { recursive: true });
         const xml = this.generator.generate(args.sessions, this.rootDir);
-        fs.writeFileSync(this.outputPath, xml.toString({
-            prettyPrint: true
-        }));
+        const xmlString = xml.end({
+            prettyPrint: true,
+            headless: false,
+            format: 'xml'
+        });
+        fs.writeFileSync(this.outputPath, xmlString);
     }
 }
 
@@ -48,10 +51,33 @@ enum ResultAttrValue {
 
 class NUnit2TestResultGenerator {
     generate(sessions: TestSession[], rootDir: string): XMLBuilder {
-        const root = create({ version: '1.0', encoding: 'utf-8', standalone: 'no' });
-        const testResults = root.ele('test-results')
+        const root = create({ version: '1.0', encoding: 'utf-8', standalone: false });
+        const testResultsEle = root.ele('test-results');
+        this.createEnvEle(testResultsEle);
+        this.createCultureEle(testResultsEle);
+        
+        const state = this.createSuiteEle(testResultsEle, "WebTestRunner", "Web Test Runner", 
+            (resultsEle, state) => sessions.forEach(s => state.merge(this.processSession(resultsEle, s, rootDir)))
+        );
+
         const d = new Date();
-        testResults.ele('environment', {
+        testResultsEle.att({
+            'name': "Web Test Runner tests",
+            'total': state.testsCount,
+            'errors': state.testsErrors,
+            'failures': state.testsFailures,
+            'not-run': state.testsNotRun,
+            'inconclusive': state.testsInconclusive,
+            'ignored': state.testsIgnored,
+            'skipped': state.testsSkipped,
+            'invalid': state.testsInvalid,
+            'date': `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`,
+            'time': `${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`
+        });
+        return testResultsEle;
+    }
+    protected createEnvEle(parent: XMLBuilder) {
+        parent.ele('environment', {
             "nunit-version": "2.5.8.0",
             "clr-version": "2.0.50727.1433",
             "os-version": os.release(),
@@ -61,67 +87,52 @@ class NUnit2TestResultGenerator {
             "user": os.userInfo().username,
             "user-domain": os.userInfo().shell
         });
-        testResults.ele('culture-info', {
+    }
+    protected createCultureEle(parent: XMLBuilder) {
+        parent.ele('culture-info', {
             "current-culture": "en-US",
             "current-uiculture": "en-US"
         });
-        const rootSuiteResults = testResults
-            .ele('results');
-        const state = new State();
-        for(let session of sessions)
-            state.merge(this.processSession(rootSuiteResults, session, rootDir));
-        rootSuiteResults.att({
-            type: "WebTestRunner",
-            name: "Web Test Runner",
-            success: state.success ? BooleanAttrValue.True : BooleanAttrValue.False,
-            time: "" + state.time,
-            executed: BooleanAttrValue.True,
-            result: state.success ? ResultAttrValue.Success : ResultAttrValue.Failure
-        });
-        testResults.att({
-            'name': "",
-            'total': state.testsCount,
-            'errors': state.testsErrors,
-            'failures': state.testsFailures,
-            'inconclusive': state.testsInconclusive,
-            'not-run': state.testsNotRun,
-            'ignored': state.testsIgnored,
-            'skipped': state.testsSkipped,
-            'invalid': state.testsInvalid,
-            'date': `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`,
-            'time': `${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`
-        });
-        return testResults;
     }
-    protected processSuite(resultsParentEle: XMLBuilder, testSuiteResult?: TestSuiteResult): State {
+    protected createSuiteEle(parent: XMLBuilder, type: string, name: string, processChildren: (resultsEle: XMLBuilder, state: State) => void, processError?: (suiteEle: XMLBuilder) => void): State {
+        const suiteEle = parent.ele('test-suite', {
+            type,
+            name
+        });
+        const resultsEle = suiteEle.ele('results');
         const state = new State();
-        let parentEle = resultsParentEle;
-        if(testSuiteResult) {
-            if(testSuiteResult.name) {
-                const suiteEle = resultsParentEle.ele('test-suite', {
-                    type: testSuiteResult.name,
-                    name: testSuiteResult.name,
-                    executed: BooleanAttrValue.True,
-                    asserts: '0'
-                });
-                parentEle = suiteEle.ele('results');
-            }
-            for(let suite of testSuiteResult.suites)
-                state.merge(this.processSuite(parentEle, suite));
-            for(let test of testSuiteResult.tests)
-                state.merge(this.processTest(parentEle, test));
-            parentEle.att(this.getSuiteElementAttributes(state));
-        }
+        processChildren(resultsEle, state);
+        suiteEle.att({
+            executed: state.testsCount - state.testsSkipped ? BooleanAttrValue.True : BooleanAttrValue.False,
+            result: state.testsCount - state.testsSkipped === 0 ? ResultAttrValue.NotRunnable : (state.success ? ResultAttrValue.Success : ResultAttrValue.Failure),
+            success: state.success ? BooleanAttrValue.True : BooleanAttrValue.False,
+            time: this.getDuration(state.time),
+            asserts: 0
+        });
+        processError && processError(suiteEle);
         return state;
+    }
+    protected processSuite(parentEle: XMLBuilder, testSuiteResult: TestSuiteResult): State {
+        return this.createSuiteEle(parentEle, 
+            testSuiteResult.name.replace(/\s/g, '_'), 
+            testSuiteResult.name, 
+            (resultsEle, state) => {
+                for(let suite of testSuiteResult.suites)
+                    state.merge(this.processSuite(resultsEle, suite));
+                for(let test of testSuiteResult.tests)
+                    state.merge(this.processTest(resultsEle, test));
+            }
+        );
     }
     protected processTest(resultsParentEle: XMLBuilder, test: TestResult): State {
         const testEle = resultsParentEle.ele('test-case', {
             name: test.name,
+            executed: test.skipped ? BooleanAttrValue.False : BooleanAttrValue.True,
+            result: test.passed ? ResultAttrValue.Success : (test.skipped ? ResultAttrValue.NotRunnable : ResultAttrValue.Failure),
             success: test.passed ? BooleanAttrValue.True : BooleanAttrValue.False,
             time: this.getDuration(test.duration ?? 0),
-            executed: test.skipped ? BooleanAttrValue.False : BooleanAttrValue.True
         });
-        if(!test.passed) {
+        if(!test.passed && !test.skipped) {
             const stack = test.error?.stack ?? '';
             const type = test.error?.name ?? (stack.match(/^\w+Error:/) ? stack.split(':')[0] : '');
             const failureEle = testEle.ele('failure');
@@ -133,29 +144,37 @@ class NUnit2TestResultGenerator {
         }
         return new State(test);
     }
-    protected processSession(resultsParent: XMLBuilder, session: TestSession, rootDir: string): State {
+    protected processSession(resultsEle: XMLBuilder, session: TestSession, rootDir: string): State {
         const fileName = session.testFile.replace(rootDir, '');
-        const suite = resultsParent.ele('test-suite', {
-            type: `${session.browser.type}_${fileName}`,
-            name: `${session.browser.name}_${session.browser.type}_${fileName}`,
-            executed: BooleanAttrValue.True,
-            asserts: '0'
-        });
-        const results = this.processSuite(suite.ele('results'), session.testResults);
-        if(session.errors.length) {
-            for (const error of session.errors) {
-                suite.ele('failure').dat(error.message);
+        return this.createSuiteEle(resultsEle, 
+            `${session.browser.type}_${fileName}`, 
+            `${session.browser.name}_${session.browser.type}_${fileName}`, 
+            (resEle, s) => {
+                if(session.testResults) {
+                    session.testResults.suites.forEach((suite) => s.merge(this.processSuite(resEle, suite)));
+                    session.testResults.tests.forEach((test) => s.merge(this.processTest(resEle, test)));
+                }
+            },
+            (suiteEle) => {
+                session.errors.forEach(err => this.createErrorEle(suiteEle, err));
+                session.request404s.forEach(err => this.createErrorEle(suiteEle, err));
+            });
+    }
+    protected createErrorEle(parent: XMLBuilder, error: TestResultError | string) {
+        const failureEle = parent.ele('failure');
+        if(typeof error === 'string')
+            failureEle.ele('message').dat(error);
+        else {
+            const stack = error.stack ?? '';
+            const type = error.name ?? (stack.match(/^\w+Error:/) ? stack.split(':')[0] : '');
+            const message = `${type}: ${error.message ?? ''}`;
+            failureEle.ele('message')
+                .dat(message);
+            if(stack) {
+                failureEle.ele('stack-trace')
+                    .dat(stack.replace(STACK_TRACE_UNIQUE_IDS_REGEX, ''));
             }
         }
-        suite.att(this.getSuiteElementAttributes(results));
-        return results;
-    }
-    private getSuiteElementAttributes(state: State): object {
-        return {
-            result: state.success ? ResultAttrValue.Success : ResultAttrValue.Failure,
-            success: state.success ? BooleanAttrValue.True : BooleanAttrValue.False,
-            time: this.getDuration(state.time)
-        };
     }
     private getDuration(time: number): string {
         return '' + time / 1000;
@@ -173,6 +192,7 @@ class State {
     testsIgnored: number = 0;
     testsSkipped: number = 0;
     testsInvalid: number = 0;
+    asserts: number = 0;
 
     constructor(test?: TestResult) {
         if(test)
@@ -186,7 +206,8 @@ class State {
             this.testsSkipped++;
         else if(!test.passed)
             this.testsFailures++;
-        this.success = test.passed;
+        if(!test.skipped)
+            this.success = test.passed;
     }
 
     merge(other: State) {

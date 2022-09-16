@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<test-results name="Web Test Runner tests" total="6" errors="0" failures="2" not-run="0" inconclusive="0" ignored="0" skipped="1" invalid="0" date="<<computed>>" time="<<computed>>">
+  <environment nunit-version="2.5.8.0" clr-version="2.0.50727.1433" os-version="<<computed>>" platform="win32" cwd="<<computed>>" machine-name="<<computed>>" user="<<computed>>"/>
+  <culture-info current-culture="en-US" current-uiculture="en-US"/>
+  <test-suite type="WebTestRunner" name="Web Test Runner" executed="True" result="Failure" success="False" time="<<computed>>" asserts="0">
+    <results>
+      <test-suite type="playwright_\test\fixtures\simple\simple-test.js" name="Chromium_playwright_\test\fixtures\simple\simple-test.js" executed="True" result="Failure" success="False" time="<<computed>>" asserts="0">
+        <results>
+          <test-suite type="real_numbers_forming_a_monoid" name="real numbers forming a monoid" executed="True" result="Success" success="True" time="<<computed>>" asserts="0">
+            <results>
+              <test-case name="under addition" executed="True" result="Success" success="True" time="<<computed>>"/>
+            </results>
+          </test-suite>
+          <test-suite type="off-by-one_boolean_logic_errors" name="off-by-one boolean logic errors" executed="True" result="Failure" success="False" time="<<computed>>" asserts="0">
+            <results>
+              <test-case name="null hypothesis" executed="True" result="Success" success="True" time="<<computed>>"/>
+              <test-case name="asserts error" executed="True" result="Failure" success="False" time="<<computed>>">
+                <failure>
+                  <message><![CDATA[AssertionError: expected false to be true]]></message>
+                  <stack-trace><![CDATA[  at o.<anonymous> (test\fixtures\simple\simple-test.js:17:29)]]></stack-trace>
+                </failure>
+              </test-case>
+              <test-case name="tbd: confirm true positive" executed="False" result="NotRunnable" success="False" time="<<computed>>"/>
+            </results>
+          </test-suite>
+          <test-suite type="logging_during_a_test" name="logging during a test" executed="True" result="Failure" success="False" time="<<computed>>" asserts="0">
+            <results>
+              <test-case name="reports logs to JUnit" executed="True" result="Success" success="True" time="<<computed>>"/>
+              <test-case name="fails with source trace" executed="True" result="Failure" success="False" time="<<computed>>">
+                <failure>
+                  <message><![CDATA[Error: failed]]></message>
+                  <stack-trace><![CDATA[  at fail (test\fixtures\simple\simple-source.js:2:9)
+  at o.<anonymous> (test\fixtures\simple\simple-test.js:33:17)]]></stack-trace>
+                </failure>
+              </test-case>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+    </results>
+  </test-suite>
+</test-results>

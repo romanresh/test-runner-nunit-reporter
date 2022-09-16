@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<test-results name="Web Test Runner tests" total="6" errors="0" failures="1" not-run="0" inconclusive="0" ignored="0" skipped="1" invalid="0" date="<<computed>>" time="<<computed>>">
+  <environment nunit-version="2.5.8.0" clr-version="2.0.50727.1433" os-version="<<computed>>" platform="win32" cwd="<<computed>>" machine-name="<<computed>>" user="<<computed>>"/>
+  <culture-info current-culture="en-US" current-uiculture="en-US"/>
+  <test-suite type="WebTestRunner" name="Web Test Runner" executed="True" result="Failure" success="False" time="<<computed>>" asserts="0">
+    <results>
+      <test-suite type="Namespace" name="NUnit" executed="True" result="Failure" success="False" time="0.807" asserts="0">
+        <results>
+          <test-suite type="Namespace" name="Tests" executed="True" result="Failure" success="False" time="0.803" asserts="0">
+            <results>
+              <test-suite type="Namespace" name="Assemblies" executed="True" result="Failure" success="False" time="0.606" asserts="0">
+                <results>
+                  <test-suite type="TestFixture" name="MockTestFixture" description="Fake Test Fixture" executed="True" result="Failure" success="False" time="0.582" asserts="0">
+                    <categories>
+                      <category name="FixtureCategory" />
+                    </categories>
+                    <results>
+                      <test-case name="NUnit.Tests.Assemblies.MockTestFixture.FailingTest" executed="True" result="Failure" success="False" time="0.013" asserts="0">
+                        <failure>
+                          <message><![CDATA[Intentional failure]]></message>
+                          <stack-trace><![CDATA[at NUnit.Tests.Assemblies.MockTestFixture.FailingTest () [0x00000] in /home/charlie/Dev/NUnit/nunit-2.5/work/src/tests/mock-assembly/MockAssembly.cs:121
+]]></stack-trace>
+                        </failure>
+                      </test-case>
+                      <test-case name="NUnit.Tests.Assemblies.MockTestFixture.InconclusiveTest" executed="True" result="Inconclusive" success="False" time="0.001" asserts="0">
+                        <reason>
+                          <message><![CDATA[No valid data]]></message>
+                        </reason>
+                      </test-case>
+                      <test-case name="NUnit.Tests.Assemblies.MockTestFixture.MockTest1" description="Mock Test #1" executed="True" result="Success" success="True" time="0.000" asserts="0" />
+                      <test-case name="NUnit.Tests.Assemblies.MockTestFixture.MockTest2" description="This is a really, really, really, really, really, really, really, really, really, really, really, really, really, really, really, really, really, really, really, really, really, really, really, really, really long description" executed="True" result="Success" success="True" time="0.000" asserts="0">
+                        <categories>
+                          <category name="MockCategory" />
+                        </categories>
+                        <properties>
+                          <property name="Severity" value="Critical" />
+                        </properties>
+                      </test-case>
+                      <test-case name="NUnit.Tests.Assemblies.MockTestFixture.MockTest3" executed="True" result="Success" success="True" time="0.001" asserts="0">
+                        <categories>
+                          <category name="AnotherCategory" />
+                          <category name="MockCategory" />
+                        </categories>
+                        <reason>
+                          <message><![CDATA[Succeeded!]]></message>
+                        </reason>
+                      </test-case>
+                      <test-case name="NUnit.Tests.Assemblies.MockTestFixture.MockTest4" executed="False" result="Ignored">
+                        <categories>
+                          <category name="Foo" />
+                        </categories>
+                        <reason>
+                          <message><![CDATA[ignoring this test method for now]]></message>
+                        </reason>
+                      </test-case>
+                      <test-case name="NUnit.Tests.Assemblies.MockTestFixture.MockTest5" executed="False" result="NotRunnable">
+                        <reason>
+                          <message><![CDATA[Method is not public]]></message>
+                        </reason>
+                      </test-case>
+                      <test-case name="NUnit.Tests.Assemblies.MockTestFixture.NotRunnableTest" executed="False" result="NotRunnable">
+                        <reason>
+                          <message><![CDATA[No arguments were provided]]></message>
+                        </reason>
+                      </test-case>
+                      <test-case name="NUnit.Tests.Assemblies.MockTestFixture.TestWithException" executed="True" result="Error" success="False" time="0.001" asserts="0">
+                        <failure>
+                          <message><![CDATA[System.ApplicationException : Intentional Exception]]></message>
+                          <stack-trace><![CDATA[at NUnit.Tests.Assemblies.MockTestFixture.TestWithException () [0x00000] in /home/charlie/Dev/NUnit/nunit-2.5/work/src/tests/mock-assembly/MockAssembly.cs:153
+]]></stack-trace>
+                        </failure>
+                      </test-case>
+                      <test-case name="NUnit.Tests.Assemblies.MockTestFixture.TestWithManyProperties" executed="True" result="Success" success="True" time="0.000" asserts="0">
+                        <properties>
+                          <property name="Size" value="5" />
+                          <property name="TargetMethod" value="SomeClassName" />
+                        </properties>
+                      </test-case>
+                    </results>
+                  </test-suite>
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="BadFixture" executed="False" result="NotRunnable">
+                <reason>
+                  <message><![CDATA[No suitable constructor was found]]></message>
+                </reason>
+                <results>
+                  <test-case name="NUnit.Tests.BadFixture.SomeTest" executed="False" result="NotRunnable">
+                    <reason>
+                      <message><![CDATA[No suitable constructor was found]]></message>
+                    </reason>
+                  </test-case>
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="FixtureWithTestCases" executed="True" result="Success" success="True" time="0.043" asserts="0">
+                <results>
+                  <test-suite type="ParameterizedTest" name="GenericMethod" executed="True" result="Success" success="True" time="0.013" asserts="0">
+                    <results>
+                      <test-case name="NUnit.Tests.FixtureWithTestCases.GenericMethod&lt;Double&gt;(9.2d,11.7d)" executed="True" result="Success" success="True" time="0.007" asserts="1" />
+                      <test-case name="NUnit.Tests.FixtureWithTestCases.GenericMethod&lt;Int32&gt;(2,4)" executed="True" result="Success" success="True" time="0.001" asserts="1" />
+                    </results>
+                  </test-suite>
+                  <test-suite type="ParameterizedTest" name="MethodWithParameters" executed="True" result="Success" success="True" time="0.011" asserts="0">
+                    <results>
+                      <test-case name="NUnit.Tests.FixtureWithTestCases.MethodWithParameters(9,11)" executed="True" result="Success" success="True" time="0.003" asserts="1" />
+                      <test-case name="NUnit.Tests.FixtureWithTestCases.MethodWithParameters(2,2)" executed="True" result="Success" success="True" time="0.000" asserts="1" />
+                    </results>
+                  </test-suite>
+                </results>
+              </test-suite>
+              <test-suite type="GenericFixture" name="GenericFixture&lt;T&gt;" executed="True" result="Success" success="True" time="0.012" asserts="0">
+                <results>
+                  <test-suite type="TestFixture" name="GenericFixture&lt;Double&gt;(11.5d)" executed="True" result="Success" success="True" time="0.011" asserts="0">
+                    <results>
+                      <test-case name="NUnit.Tests.GenericFixture&lt;Double&gt;(11.5d).Test1" executed="True" result="Success" success="True" time="0.000" asserts="0" />
+                      <test-case name="NUnit.Tests.GenericFixture&lt;Double&gt;(11.5d).Test2" executed="True" result="Success" success="True" time="0.000" asserts="0" />
+                    </results>
+                  </test-suite>
+                  <test-suite type="TestFixture" name="GenericFixture&lt;Int32&gt;(5)" executed="True" result="Success" success="True" time="0.001" asserts="0">
+                    <results>
+                      <test-case name="NUnit.Tests.GenericFixture&lt;Int32&gt;(5).Test1" executed="True" result="Success" success="True" time="0.000" asserts="0" />
+                      <test-case name="NUnit.Tests.GenericFixture&lt;Int32&gt;(5).Test2" executed="True" result="Success" success="True" time="0.000" asserts="0" />
+                    </results>
+                  </test-suite>
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="IgnoredFixture" executed="False" result="Ignored">
+                <reason>
+                  <message><![CDATA[]]></message>
+                </reason>
+                <results>
+                  <test-case name="NUnit.Tests.IgnoredFixture.Test1" executed="False" result="Ignored">
+                    <reason>
+                      <message><![CDATA[]]></message>
+                    </reason>
+                  </test-case>
+                  <test-case name="NUnit.Tests.IgnoredFixture.Test2" executed="False" result="Ignored">
+                    <reason>
+                      <message><![CDATA[]]></message>
+                    </reason>
+                  </test-case>
+                  <test-case name="NUnit.Tests.IgnoredFixture.Test3" executed="False" result="Ignored">
+                    <reason>
+                      <message><![CDATA[]]></message>
+                    </reason>
+                  </test-case>
+                </results>
+              </test-suite>
+              <test-suite type="ParameterizedFixture" name="ParameterizedFixture" executed="True" result="Success" success="True" time="0.069" asserts="0">
+                <results>
+                  <test-suite type="TestFixture" name="ParameterizedFixture(42)" executed="True" result="Success" success="True" time="0.048" asserts="0">
+                    <results>
+                      <test-case name="NUnit.Tests.ParameterizedFixture(42).Test1" executed="True" result="Success" success="True" time="0.000" asserts="0" />
+                      <test-case name="NUnit.Tests.ParameterizedFixture(42).Test2" executed="True" result="Success" success="True" time="0.000" asserts="0" />
+                    </results>
+                  </test-suite>
+                  <test-suite type="TestFixture" name="ParameterizedFixture(5)" executed="True" result="Success" success="True" time="0.007" asserts="0">
+                    <results>
+                      <test-case name="NUnit.Tests.ParameterizedFixture(5).Test1" executed="True" result="Success" success="True" time="0.000" asserts="0" />
+                      <test-case name="NUnit.Tests.ParameterizedFixture(5).Test2" executed="True" result="Success" success="True" time="0.000" asserts="0" />
+                    </results>
+                  </test-suite>
+                </results>
+              </test-suite>
+              <test-suite type="Namespace" name="Singletons" executed="True" result="Success" success="True" time="0.005" asserts="0">
+                <results>
+                  <test-suite type="TestFixture" name="OneTestCase" executed="True" result="Success" success="True" time="0.001" asserts="0">
+                    <results>
+                      <test-case name="NUnit.Tests.Singletons.OneTestCase.TestCase" executed="True" result="Success" success="True" time="0.000" asserts="0" />
+                    </results>
+                  </test-suite>
+                </results>
+              </test-suite>
+              <test-suite type="Namespace" name="TestAssembly" executed="True" result="Success" success="True" time="0.005" asserts="0">
+                <results>
+                  <test-suite type="TestFixture" name="MockTestFixture" executed="True" result="Success" success="True" time="0.001" asserts="0">
+                    <results>
+                      <test-case name="NUnit.Tests.TestAssembly.MockTestFixture.MyTest" executed="True" result="Success" success="True" time="0.000" asserts="0" />
+                    </results>
+                  </test-suite>
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+    </results>
+  </test-suite>
+</test-results>
+
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Chrome_puppeteer_/packages/test-runner-junit-reporter/test/fixtures/multiple/nested-test.js" id="0" tests="1" skipped="0" errors="0" failures="0" time="0.001">
+    <properties>
+      <property name="test.fileName" value="packages/test-runner-junit-reporter/test/fixtures/multiple/nested-test.js"/>
+      <property name="browser.name" value="Chrome"/>
+      <property name="browser.launcher" value="puppeteer"/>
+    </properties>
+    <testcase name="is equivalent to map (f.g) f a" time="<<computed>>" classname="given a functor f and a function a -&gt; b map f map g f a" file="packages/test-runner-junit-reporter/test/fixtures/multiple/nested-test.js"/>
+  </testsuite>
+  <testsuite name="Chrome_puppeteer_/packages/test-runner-junit-reporter/test/fixtures/multiple/simple-test.js" id="0" tests="5" skipped="1" errors="1" failures="1" time="0.001">
+    <properties>
+      <property name="test.fileName" value="packages/test-runner-junit-reporter/test/fixtures/multiple/simple-test.js"/>
+      <property name="browser.name" value="Chrome"/>
+      <property name="browser.launcher" value="puppeteer"/>
+    </properties>
+    <testcase name="under addition" time="0.001" classname="real numbers forming a monoid" file="packages/test-runner-junit-reporter/test/fixtures/multiple/simple-test.js"/>
+    <testcase name="null hypothesis" time="0.001" classname="off-by-one boolean logic errors" file="packages/test-runner-junit-reporter/test/fixtures/multiple/simple-test.js"/>
+    <testcase name="asserts error" time="0.001" classname="off-by-one boolean logic errors" file="packages/test-runner-junit-reporter/test/fixtures/multiple/simple-test.js" line="15">
+      <failure message="expected false to be true" type="AssertionError"><![CDATA[AssertionError: expected false to be true
+  at o.<anonymous> (packages/test-runner-junit-reporter/test/fixtures/multiple/simple-test.js:15:29)]]></failure>
+    </testcase>
+    <testcase name="tbd: confirm true positive" time="0" classname="off-by-one boolean logic errors" file="packages/test-runner-junit-reporter/test/fixtures/multiple/simple-test.js">
+      <skipped/>
+    </testcase>
+    <testcase name="reports logs to JUnit" time="0.001" classname="logging during a test" file="packages/test-runner-junit-reporter/test/fixtures/multiple/simple-test.js"/>
+  </testsuite>
+</testsuites>
