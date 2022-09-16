@@ -4,7 +4,8 @@
   "description": "NUnit reported for @web/test-runner",
   "main": "dist/index.js",
   "scripts": {
-    "test": "mocha test/**/*.test.ts --require ts-node/register --reporter dot"
+    "test": "mocha test/**/*.test.ts --require ts-node/register --reporter dot",
+    "build": "tsc"
   },
   "author": "",
   "license": "ISC",
